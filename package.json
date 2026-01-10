@@ -1,0 +1,19 @@
+{
+  "name": "realistic-shadow-generator",
+  "version": "1.0.0",
+  "description": "Generate realistic shadows for foreground subjects on background images",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["shadow", "image-processing", "graphics"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "typescript": "^5.3.0"
+  }
+}
