@@ -1,3 +1,24 @@
+# Development files
 steps.md
-
 task.md
+
+# Claude
+.claude
+
+# Dependencies
+node_modules
+
+# Build output
+dist
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
