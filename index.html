@@ -124,6 +124,26 @@
       max-height: calc(100vh - 96px);
     }
 
+    .sidebar::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+      background: var(--color-surface-elevated);
+      border-radius: 4px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--color-border);
+      border-radius: 4px;
+      transition: background 0.2s ease;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background: var(--color-safelight);
+      box-shadow: 0 0 8px var(--color-safelight-glow);
+    }
+
     .section {
       margin-bottom: 2.5rem;
       animation: fadeInUp 0.6s ease-out backwards;
@@ -177,6 +197,10 @@
       position: relative;
       overflow: hidden;
       margin-bottom: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
 
     .upload-zone:hover {
@@ -217,6 +241,37 @@
       font-size: 0.75rem;
       color: var(--color-text-dim);
       pointer-events: none;
+    }
+
+    .upload-remove {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      width: 24px;
+      height: 24px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-safelight);
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      z-index: 10;
+      font-size: 0.75rem;
+      color: var(--color-safelight);
+      font-weight: 600;
+    }
+
+    .upload-zone.has-file .upload-remove {
+      display: flex;
+    }
+
+    .upload-remove:hover {
+      background: var(--color-safelight);
+      color: var(--color-darkroom);
+      box-shadow: 0 0 12px var(--color-safelight-glow);
+      transform: scale(1.1);
     }
 
     .control-group {
@@ -314,6 +369,7 @@
     }
 
     .btn-primary:hover {
+      background: linear-gradient(135deg, #ff8555 0%, #ff9d3e 100%);
       box-shadow: var(--shadow-glow), var(--shadow-md);
       transform: translateY(-1px);
       color: var(--color-darkroom);
@@ -395,7 +451,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--color-darkroom);
+      background:
+        repeating-conic-gradient(#2a2a2a 0% 25%, #1a1a1a 0% 50%)
+        50% / 20px 20px;
       border-radius: 12px;
       overflow: hidden;
       position: relative;
@@ -555,18 +613,21 @@
 
         <div class="upload-zone" id="foreground-zone">
           <input type="file" id="foreground-input" accept="image/*">
+          <button class="upload-remove" id="foreground-remove" title="Remove image">×</button>
           <span class="upload-label">Foreground</span>
           <span class="upload-hint">PNG with transparency</span>
         </div>
 
         <div class="upload-zone" id="background-zone">
           <input type="file" id="background-input" accept="image/*">
+          <button class="upload-remove" id="background-remove" title="Remove image">×</button>
           <span class="upload-label">Background</span>
           <span class="upload-hint">Any image format</span>
         </div>
 
         <div class="upload-zone" id="depth-zone">
           <input type="file" id="depth-input" accept="image/*">
+          <button class="upload-remove" id="depth-remove" title="Remove image">×</button>
           <span class="upload-label">Depth Map</span>
           <span class="upload-hint">Optional • Grayscale</span>
         </div>

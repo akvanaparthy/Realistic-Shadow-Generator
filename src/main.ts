@@ -16,6 +16,9 @@ class ShadowStudioUI {
     foregroundZone: document.getElementById('foreground-zone') as HTMLElement,
     backgroundZone: document.getElementById('background-zone') as HTMLElement,
     depthZone: document.getElementById('depth-zone') as HTMLElement,
+    foregroundRemove: document.getElementById('foreground-remove') as HTMLButtonElement,
+    backgroundRemove: document.getElementById('background-remove') as HTMLButtonElement,
+    depthRemove: document.getElementById('depth-remove') as HTMLButtonElement,
     depthToggleContainer: document.getElementById('depth-toggle-container') as HTMLElement,
     depthToggle: document.getElementById('depth-toggle') as HTMLElement,
 
@@ -48,6 +51,19 @@ class ShadowStudioUI {
     this.elements.foregroundInput.addEventListener('change', (e) => this.handleForegroundUpload(e));
     this.elements.backgroundInput.addEventListener('change', (e) => this.handleBackgroundUpload(e));
     this.elements.depthInput.addEventListener('change', (e) => this.handleDepthUpload(e));
+
+    this.elements.foregroundRemove.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.clearForeground();
+    });
+    this.elements.backgroundRemove.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.clearBackground();
+    });
+    this.elements.depthRemove.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.clearDepth();
+    });
 
     this.elements.depthToggle.addEventListener('click', () => this.toggleDepthMap());
 
@@ -125,6 +141,31 @@ class ShadowStudioUI {
       console.error('Failed to load depth map:', error);
       alert('Failed to load depth map');
     }
+  }
+
+  private clearForeground(): void {
+    this.elements.foregroundInput.value = '';
+    this.elements.foregroundZone.classList.remove('has-file');
+    this.currentResult = null;
+    this.displayCanvas(null);
+  }
+
+  private clearBackground(): void {
+    this.elements.backgroundInput.value = '';
+    this.elements.backgroundZone.classList.remove('has-file');
+    this.currentResult = null;
+    this.displayCanvas(null);
+  }
+
+  private clearDepth(): void {
+    this.elements.depthInput.value = '';
+    this.elements.depthZone.classList.remove('has-file');
+    this.elements.depthToggleContainer.style.display = 'none';
+    this.depthMapLoaded = false;
+    this.depthMapEnabled = false;
+    this.elements.depthToggle.classList.remove('active');
+    this.app.clearDepthMap();
+    this.regenerateShadow();
   }
 
   private toggleDepthMap(): void {
