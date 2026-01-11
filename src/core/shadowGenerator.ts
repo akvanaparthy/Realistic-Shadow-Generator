@@ -48,38 +48,61 @@ export class ShadowGenerator {
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) throw new Error('Failed to get canvas context');
 
-    const offset = this.calculateShadowOffset(light);
     const contactY = MaskExtractor.findContactPoint(this.mask);
     const absoluteContactY = this.position.y + contactY;
 
     const imageData = ctx.createImageData(this.background.width, this.background.height);
     const pixels = imageData.data;
 
-    for (let bgY = 0; bgY < this.background.height; bgY++) {
-      for (let bgX = 0; bgX < this.background.width; bgX++) {
-        const sourceX = Math.round(bgX - this.position.x - offset.x);
-        const sourceY = Math.round(bgY - this.position.y - offset.y);
+    const angleRad = (light.angle * Math.PI) / 180;
+    const elevationRad = (light.elevation * Math.PI) / 180;
 
-        if (sourceX >= 0 && sourceX < this.mask.width && sourceY >= 0 && sourceY < this.mask.height) {
-          const sourceIndex = sourceY * this.mask.width + sourceX;
+    const lightHeight = 500;
+    const lightDist = lightHeight / Math.tan(elevationRad + 0.01);
+    const lightX = Math.cos(angleRad) * lightDist;
+    const lightY = Math.sin(angleRad) * lightDist;
 
-          if (this.mask.data[sourceIndex] > 128) {
-            const distanceFromContact = Math.abs(bgY - (absoluteContactY + offset.y));
-            const normalizedDistance = Math.min(distanceFromContact / shadow.falloffDistance, 1);
+    for (let srcY = 0; srcY < this.mask.height; srcY++) {
+      for (let srcX = 0; srcX < this.mask.width; srcX++) {
+        const sourceIndex = srcY * this.mask.width + srcX;
 
-            let opacity = this.calculateOpacity(normalizedDistance, shadow);
+        if (this.mask.data[sourceIndex] > 128) {
+          const objX = this.position.x + srcX;
+          const objY = this.position.y + srcY;
+          const objHeight = (contactY - srcY) * 0.5;
 
-            if (this.depthMap && bgX >= 0 && bgX < this.depthMap.width && bgY >= 0 && bgY < this.depthMap.height) {
-              const depthIndex = bgY * this.depthMap.width + bgX;
-              const depthValue = this.depthMap.data[depthIndex] / 255;
-              opacity *= (1 - depthValue * 0.3);
+          const groundY = absoluteContactY;
+
+          if (objHeight > 0 && elevationRad > 0.01) {
+            const t = (lightHeight - objHeight) / lightHeight;
+
+            const shadowX = objX + lightX * (1 - t);
+            const shadowY = groundY + lightY * (1 - t);
+
+            const bgX = Math.round(shadowX);
+            const bgY = Math.round(shadowY);
+
+            if (bgX >= 0 && bgX < this.background.width && bgY >= 0 && bgY < this.background.height) {
+              const distanceFromContact = Math.abs(bgY - groundY);
+              const normalizedDistance = Math.min(distanceFromContact / shadow.falloffDistance, 1);
+
+              let opacity = this.calculateOpacity(normalizedDistance, shadow, light.intensity);
+
+              if (this.depthMap && bgX >= 0 && bgX < this.depthMap.width && bgY >= 0 && bgY < this.depthMap.height) {
+                const depthIndex = bgY * this.depthMap.width + bgX;
+                const depthValue = this.depthMap.data[depthIndex] / 255;
+                opacity *= (1 - depthValue * 0.3);
+              }
+
+              const pixelIndex = (bgY * this.background.width + bgX) * 4;
+              const currentAlpha = pixels[pixelIndex + 3] / 255;
+              const newAlpha = Math.max(currentAlpha, opacity);
+
+              pixels[pixelIndex] = 0;
+              pixels[pixelIndex + 1] = 0;
+              pixels[pixelIndex + 2] = 0;
+              pixels[pixelIndex + 3] = Math.round(newAlpha * 255);
             }
-
-            const pixelIndex = (bgY * this.background.width + bgX) * 4;
-            pixels[pixelIndex] = 0;
-            pixels[pixelIndex + 1] = 0;
-            pixels[pixelIndex + 2] = 0;
-            pixels[pixelIndex + 3] = Math.round(opacity * 255);
           }
         }
       }
@@ -103,10 +126,10 @@ export class ShadowGenerator {
     return { x, y };
   }
 
-  private calculateOpacity(normalizedDistance: number, shadow: ShadowParameters): number {
+  private calculateOpacity(normalizedDistance: number, shadow: ShadowParameters, intensity: number): number {
     const contactBoost = Math.exp(-normalizedDistance * 4) * shadow.contactDarkness;
     const baseOpacity = 0.5 * (1 - normalizedDistance * 0.8);
-    return Math.min(contactBoost + baseOpacity, 1);
+    return Math.min((contactBoost + baseOpacity) * intensity, 1);
   }
 
   private applyBlur(canvas: HTMLCanvasElement, blurRadius: number): HTMLCanvasElement {

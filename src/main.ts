@@ -35,12 +35,14 @@ class ShadowStudioUI {
 
     angleSlider: document.getElementById('angle-slider') as HTMLInputElement,
     elevationSlider: document.getElementById('elevation-slider') as HTMLInputElement,
+    intensitySlider: document.getElementById('intensity-slider') as HTMLInputElement,
     darknessSlider: document.getElementById('darkness-slider') as HTMLInputElement,
     blurSlider: document.getElementById('blur-slider') as HTMLInputElement,
     falloffSlider: document.getElementById('falloff-slider') as HTMLInputElement,
 
     angleValue: document.getElementById('angle-value') as HTMLElement,
     elevationValue: document.getElementById('elevation-value') as HTMLElement,
+    intensityValue: document.getElementById('intensity-value') as HTMLElement,
     darknessValue: document.getElementById('darkness-value') as HTMLElement,
     blurValue: document.getElementById('blur-value') as HTMLElement,
     falloffValue: document.getElementById('falloff-value') as HTMLElement,
@@ -95,6 +97,7 @@ class ShadowStudioUI {
 
     this.elements.angleSlider.addEventListener('input', () => this.handleControlChange());
     this.elements.elevationSlider.addEventListener('input', () => this.handleControlChange());
+    this.elements.intensitySlider.addEventListener('input', () => this.handleControlChange());
     this.elements.darknessSlider.addEventListener('input', () => this.handleControlChange());
     this.elements.blurSlider.addEventListener('input', () => this.handleControlChange());
     this.elements.falloffSlider.addEventListener('input', () => this.handleControlChange());
@@ -265,6 +268,7 @@ class ShadowStudioUI {
   private handleControlChange(): void {
     this.elements.angleValue.textContent = this.elements.angleSlider.value;
     this.elements.elevationValue.textContent = this.elements.elevationSlider.value;
+    this.elements.intensityValue.textContent = parseFloat(this.elements.intensitySlider.value).toFixed(2);
     this.elements.darknessValue.textContent = parseFloat(this.elements.darknessSlider.value).toFixed(2);
     this.elements.blurValue.textContent = this.elements.blurSlider.value;
     this.elements.falloffValue.textContent = this.elements.falloffSlider.value;
@@ -278,6 +282,7 @@ class ShadowStudioUI {
     const light: LightParameters = {
       angle: parseFloat(this.elements.angleSlider.value),
       elevation: parseFloat(this.elements.elevationSlider.value),
+      intensity: parseFloat(this.elements.intensitySlider.value),
     };
 
     const shadow: ShadowParameters = {

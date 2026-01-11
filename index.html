@@ -882,14 +882,7 @@
     .drag-indicator {
       position: absolute;
       pointer-events: none;
-      border: 2px dashed var(--color-safelight);
-      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(0, 0, 0, 0.5);
-      opacity: 0;
-      transition: opacity 0.2s ease;
-    }
-
-    .canvas-overlay.dragging .drag-indicator {
-      opacity: 1;
+      display: none;
     }
   </style>
 </head>
@@ -978,6 +971,14 @@
             <span class="control-value"><span id="elevation-value">45</span>°</span>
           </div>
           <input type="range" class="slider" id="elevation-slider" min="0" max="90" value="45">
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>Intensity</span>
+            <span class="control-value" id="intensity-value">1.00</span>
+          </div>
+          <input type="range" class="slider" id="intensity-slider" min="0" max="2" step="0.01" value="1">
         </div>
       </section>
 
