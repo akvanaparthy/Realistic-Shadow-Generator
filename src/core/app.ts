@@ -2,7 +2,7 @@ import { ImageLoader } from './imageLoader';
 import { MaskExtractor } from './maskExtractor';
 import { ShadowGenerator } from './shadowGenerator';
 import { Exporter } from './exporter';
-import { ProcessedImage, MaskData, LightParameters, ShadowParameters, GeneratedShadow } from './types';
+import { ProcessedImage, MaskData, LightParameters, ShadowParameters, GeneratedShadow, ForegroundPosition, PositionPreset } from './types';
 
 export class ShadowApp {
   private foreground: ProcessedImage | null = null;
@@ -10,6 +10,7 @@ export class ShadowApp {
   private depthMap: MaskData | null = null;
   private mask: MaskData | null = null;
   private generator: ShadowGenerator | null = null;
+  private position: ForegroundPosition = { x: 0, y: 0 };
 
   async loadForeground(file: File): Promise<void> {
     this.foreground = await ImageLoader.loadFromFile(file);
@@ -53,9 +54,35 @@ export class ShadowApp {
     }
   }
 
+  setPositionPreset(preset: PositionPreset): void {
+    if (!this.foreground || !this.background) return;
+
+    const bgWidth = this.background.width;
+    const bgHeight = this.background.height;
+    const fgWidth = this.foreground.width;
+    const fgHeight = this.foreground.height;
+
+    const positions: Record<PositionPreset, ForegroundPosition> = {
+      'top-left': { x: 0, y: 0 },
+      'top-center': { x: (bgWidth - fgWidth) / 2, y: 0 },
+      'top-right': { x: bgWidth - fgWidth, y: 0 },
+      'middle-left': { x: 0, y: (bgHeight - fgHeight) / 2 },
+      'middle-center': { x: (bgWidth - fgWidth) / 2, y: (bgHeight - fgHeight) / 2 },
+      'middle-right': { x: bgWidth - fgWidth, y: (bgHeight - fgHeight) / 2 },
+      'bottom-left': { x: 0, y: bgHeight - fgHeight },
+      'bottom-center': { x: (bgWidth - fgWidth) / 2, y: bgHeight - fgHeight },
+      'bottom-right': { x: bgWidth - fgWidth, y: bgHeight - fgHeight },
+    };
+
+    this.position = positions[preset];
+    if (this.generator) {
+      this.generator.setPosition(this.position);
+    }
+  }
+
   private updateGenerator(): void {
     if (this.foreground && this.background && this.mask) {
-      this.generator = new ShadowGenerator(this.foreground, this.background, this.mask);
+      this.generator = new ShadowGenerator(this.foreground, this.background, this.mask, this.position);
       if (this.depthMap) {
         this.generator.setDepthMap(this.depthMap);
       }

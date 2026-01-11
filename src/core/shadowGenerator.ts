@@ -1,4 +1,4 @@
-import { ProcessedImage, MaskData, LightParameters, ShadowParameters, GeneratedShadow } from './types';
+import { ProcessedImage, MaskData, LightParameters, ShadowParameters, GeneratedShadow, ForegroundPosition } from './types';
 import { MaskExtractor } from './maskExtractor';
 
 export class ShadowGenerator {
@@ -6,19 +6,26 @@ export class ShadowGenerator {
   private background: ProcessedImage;
   private mask: MaskData;
   private depthMap: MaskData | null = null;
+  private position: ForegroundPosition;
 
   constructor(
     foreground: ProcessedImage,
     background: ProcessedImage,
-    mask: MaskData
+    mask: MaskData,
+    position: ForegroundPosition
   ) {
     this.foreground = foreground;
     this.background = background;
     this.mask = mask;
+    this.position = position;
   }
 
   setDepthMap(depthMap: MaskData | null): void {
     this.depthMap = depthMap;
+  }
+
+  setPosition(position: ForegroundPosition): void {
+    this.position = position;
   }
 
   generate(light: LightParameters, shadow: ShadowParameters): GeneratedShadow {
@@ -35,39 +42,40 @@ export class ShadowGenerator {
 
   private createShadowLayer(light: LightParameters, shadow: ShadowParameters): HTMLCanvasElement {
     const canvas = document.createElement('canvas');
-    canvas.width = this.mask.width;
-    canvas.height = this.mask.height;
+    canvas.width = this.background.width;
+    canvas.height = this.background.height;
 
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) throw new Error('Failed to get canvas context');
 
     const offset = this.calculateShadowOffset(light);
     const contactY = MaskExtractor.findContactPoint(this.mask);
+    const absoluteContactY = this.position.y + contactY;
 
-    const imageData = ctx.createImageData(this.mask.width, this.mask.height);
+    const imageData = ctx.createImageData(this.background.width, this.background.height);
     const pixels = imageData.data;
 
-    for (let y = 0; y < this.mask.height; y++) {
-      for (let x = 0; x < this.mask.width; x++) {
-        const sourceX = Math.round(x - offset.x);
-        const sourceY = Math.round(y - offset.y);
+    for (let bgY = 0; bgY < this.background.height; bgY++) {
+      for (let bgX = 0; bgX < this.background.width; bgX++) {
+        const sourceX = Math.round(bgX - this.position.x - offset.x);
+        const sourceY = Math.round(bgY - this.position.y - offset.y);
 
         if (sourceX >= 0 && sourceX < this.mask.width && sourceY >= 0 && sourceY < this.mask.height) {
           const sourceIndex = sourceY * this.mask.width + sourceX;
 
           if (this.mask.data[sourceIndex] > 128) {
-            const distanceFromContact = Math.abs(y - (contactY + offset.y));
+            const distanceFromContact = Math.abs(bgY - (absoluteContactY + offset.y));
             const normalizedDistance = Math.min(distanceFromContact / shadow.falloffDistance, 1);
 
             let opacity = this.calculateOpacity(normalizedDistance, shadow);
 
-            if (this.depthMap) {
-              const targetIndex = y * this.mask.width + x;
-              const depthValue = this.depthMap.data[targetIndex] / 255;
+            if (this.depthMap && bgX >= 0 && bgX < this.depthMap.width && bgY >= 0 && bgY < this.depthMap.height) {
+              const depthIndex = bgY * this.depthMap.width + bgX;
+              const depthValue = this.depthMap.data[depthIndex] / 255;
               opacity *= (1 - depthValue * 0.3);
             }
 
-            const pixelIndex = (y * this.mask.width + x) * 4;
+            const pixelIndex = (bgY * this.background.width + bgX) * 4;
             pixels[pixelIndex] = 0;
             pixels[pixelIndex + 1] = 0;
             pixels[pixelIndex + 2] = 0;
@@ -131,7 +139,7 @@ export class ShadowGenerator {
 
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1.0;
-    ctx.drawImage(this.foreground.canvas, 0, 0);
+    ctx.drawImage(this.foreground.canvas, this.position.x, this.position.y);
 
     return canvas;
   }

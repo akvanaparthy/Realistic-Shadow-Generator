@@ -1,5 +1,5 @@
 import { ShadowApp } from './core/app';
-import { LightParameters, ShadowParameters, GeneratedShadow } from './core/types';
+import { LightParameters, ShadowParameters, GeneratedShadow, PositionPreset } from './core/types';
 import { Exporter } from './core/exporter';
 
 class ShadowStudioUI {
@@ -68,6 +68,13 @@ class ShadowStudioUI {
     this.elements.exportShadow.addEventListener('click', () => this.exportShadow());
     this.elements.exportMask.addEventListener('click', () => this.exportMask());
     this.elements.exportAll.addEventListener('click', () => this.exportAllImages());
+
+    document.querySelectorAll('.position-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const position = (e.target as HTMLElement).dataset.position as PositionPreset;
+        this.handlePositionChange(position);
+      });
+    });
   }
 
   private async handleForegroundUpload(event: Event): Promise<void> {
@@ -93,6 +100,7 @@ class ShadowStudioUI {
     try {
       await this.app.loadBackground(file);
       this.elements.backgroundZone.classList.add('has-file');
+      this.app.setPositionPreset('middle-center');
       this.regenerateShadow();
     } catch (error) {
       console.error('Failed to load background:', error);
@@ -135,6 +143,18 @@ class ShadowStudioUI {
       this.app.clearDepthMap();
       this.regenerateShadow();
     }
+  }
+
+  private handlePositionChange(position: PositionPreset): void {
+    document.querySelectorAll('.position-btn').forEach(btn => {
+      btn.classList.remove('active');
+    });
+
+    const activeBtn = document.querySelector(`[data-position="${position}"]`);
+    activeBtn?.classList.add('active');
+
+    this.app.setPositionPreset(position);
+    this.regenerateShadow();
   }
 
   private handleControlChange(): void {

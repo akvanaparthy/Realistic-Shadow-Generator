@@ -9,6 +9,16 @@ export interface ShadowParameters {
   falloffDistance: number;
 }
 
+export type PositionPreset =
+  | 'top-left' | 'top-center' | 'top-right'
+  | 'middle-left' | 'middle-center' | 'middle-right'
+  | 'bottom-left' | 'bottom-center' | 'bottom-right';
+
+export interface ForegroundPosition {
+  x: number;
+  y: number;
+}
+
 export interface ProcessedImage {
   canvas: HTMLCanvasElement;
   width: number;
