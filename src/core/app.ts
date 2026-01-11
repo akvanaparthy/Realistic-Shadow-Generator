@@ -21,6 +21,13 @@ export class ShadowApp {
     this.updateGenerator();
   }
 
+  async loadForegroundWithCutout(file: File): Promise<void> {
+    this.foreground = await ImageLoader.removeForegroundBackground(file);
+    this.foregroundOriginal = this.foreground;
+    this.mask = MaskExtractor.extractFromAlpha(this.foreground);
+    this.updateGenerator();
+  }
+
   async loadBackground(file: File): Promise<void> {
     this.background = await ImageLoader.loadFromFile(file);
     this.backgroundOriginal = this.background;

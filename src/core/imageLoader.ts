@@ -1,4 +1,5 @@
 import { ProcessedImage } from './types';
+import { removeBackground } from '@imgly/background-removal';
 
 export class ImageLoader {
   static async loadFromFile(file: File): Promise<ProcessedImage> {
@@ -79,5 +80,18 @@ export class ImageLoader {
       width: newWidth,
       height: newHeight
     };
+  }
+
+  static async removeForegroundBackground(file: File): Promise<ProcessedImage> {
+    try {
+      const blob = await removeBackground(file);
+      const url = URL.createObjectURL(blob);
+      const img = await this.createImageFromUrl(url);
+      URL.revokeObjectURL(url);
+      return this.imageToCanvas(img);
+    } catch (error) {
+      console.error('Background removal failed:', error);
+      throw new Error('Failed to remove background. Loading original image.');
+    }
   }
 }

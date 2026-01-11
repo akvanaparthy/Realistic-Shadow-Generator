@@ -214,6 +214,30 @@
       background: var(--color-surface);
     }
 
+    .upload-zone.processing {
+      border-color: var(--color-safelight);
+      background: var(--color-surface);
+      position: relative;
+      pointer-events: none;
+    }
+
+    .upload-zone.processing::after {
+      content: 'Processing...';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 0.875rem;
+      color: var(--color-safelight);
+      font-weight: 600;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
     .upload-zone input[type="file"] {
       position: absolute;
       opacity: 0;
@@ -844,11 +868,15 @@
       height: 100%;
       cursor: move;
       z-index: 5;
-      display: none;
+      pointer-events: none;
     }
 
-    .canvas-overlay.draggable {
-      display: block;
+    .canvas-overlay.active {
+      pointer-events: auto;
+    }
+
+    .canvas-overlay.dragging {
+      cursor: grabbing;
     }
 
     .drag-indicator {
@@ -856,11 +884,12 @@
       pointer-events: none;
       border: 2px dashed var(--color-safelight);
       box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(0, 0, 0, 0.5);
-      display: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
     }
 
-    .canvas-overlay.draggable .drag-indicator {
-      display: block;
+    .canvas-overlay.dragging .drag-indicator {
+      opacity: 1;
     }
   </style>
 </head>
@@ -903,6 +932,11 @@
           <button class="upload-remove" id="depth-remove" title="Remove image">×</button>
           <span class="upload-label">Depth Map</span>
           <span class="upload-hint">Optional • Grayscale</span>
+        </div>
+
+        <div class="depth-toggle" id="auto-cutout-toggle-container">
+          <div class="toggle-switch" id="auto-cutout-toggle"></div>
+          <span class="toggle-label">Auto cutout foreground</span>
         </div>
 
         <div class="depth-toggle" id="depth-toggle-container" style="display: none;">

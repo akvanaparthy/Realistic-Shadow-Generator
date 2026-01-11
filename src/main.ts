@@ -8,6 +8,7 @@ class ShadowStudioUI {
   private currentView: 'composite' | 'shadow' | 'mask' = 'composite';
   private depthMapLoaded = false;
   private depthMapEnabled = false;
+  private autoCutoutEnabled = false;
   private resizeImageType: 'foreground' | 'background' | null = null;
   private aspectRatioLocked = true;
   private originalAspectRatio = 1;
@@ -27,6 +28,8 @@ class ShadowStudioUI {
     foregroundRemove: document.getElementById('foreground-remove') as HTMLButtonElement,
     backgroundRemove: document.getElementById('background-remove') as HTMLButtonElement,
     depthRemove: document.getElementById('depth-remove') as HTMLButtonElement,
+    autoCutoutToggleContainer: document.getElementById('auto-cutout-toggle-container') as HTMLElement,
+    autoCutoutToggle: document.getElementById('auto-cutout-toggle') as HTMLElement,
     depthToggleContainer: document.getElementById('depth-toggle-container') as HTMLElement,
     depthToggle: document.getElementById('depth-toggle') as HTMLElement,
 
@@ -87,6 +90,7 @@ class ShadowStudioUI {
       this.clearDepth();
     });
 
+    this.elements.autoCutoutToggle.addEventListener('click', () => this.toggleAutoCutout());
     this.elements.depthToggle.addEventListener('click', () => this.toggleDepthMap());
 
     this.elements.angleSlider.addEventListener('input', () => this.handleControlChange());
@@ -147,10 +151,17 @@ class ShadowStudioUI {
     if (!file) return;
 
     try {
-      await this.app.loadForeground(file);
+      if (this.autoCutoutEnabled) {
+        this.elements.foregroundZone.classList.add('processing');
+        const processedImage = await this.app.loadForegroundWithCutout(file);
+        this.elements.foregroundZone.classList.remove('processing');
+      } else {
+        await this.app.loadForeground(file);
+      }
       this.elements.foregroundZone.classList.add('has-file');
       this.regenerateShadow();
     } catch (error) {
+      this.elements.foregroundZone.classList.remove('processing');
       console.error('Failed to load foreground:', error);
       alert('Failed to load foreground image');
     }
@@ -214,6 +225,11 @@ class ShadowStudioUI {
     this.elements.depthToggle.classList.remove('active');
     this.app.clearDepthMap();
     this.regenerateShadow();
+  }
+
+  private toggleAutoCutout(): void {
+    this.autoCutoutEnabled = !this.autoCutoutEnabled;
+    this.elements.autoCutoutToggle.classList.toggle('active', this.autoCutoutEnabled);
   }
 
   private toggleDepthMap(): void {
@@ -300,17 +316,28 @@ class ShadowStudioUI {
   }
 
   private displayCanvas(canvas: HTMLCanvasElement | null): void {
-    this.elements.canvasContainer.innerHTML = '';
+    const existingCanvas = this.elements.canvasContainer.querySelector('canvas');
+    const emptyState = this.elements.canvasContainer.querySelector('.empty-state');
+
+    if (existingCanvas) {
+      existingCanvas.remove();
+    }
+    if (emptyState) {
+      emptyState.remove();
+    }
 
     if (canvas) {
-      this.elements.canvasContainer.appendChild(canvas);
+      this.elements.canvasContainer.insertBefore(canvas, this.elements.canvasOverlay);
+      this.elements.canvasOverlay.classList.add('active');
     } else {
-      this.elements.canvasContainer.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-state-icon">◐</div>
-          <div>Upload foreground and background images to begin</div>
-        </div>
+      const emptyStateEl = document.createElement('div');
+      emptyStateEl.className = 'empty-state';
+      emptyStateEl.innerHTML = `
+        <div class="empty-state-icon">◐</div>
+        <div>Upload foreground and background images to begin</div>
       `;
+      this.elements.canvasContainer.insertBefore(emptyStateEl, this.elements.canvasOverlay);
+      this.elements.canvasOverlay.classList.remove('active');
     }
   }
 
@@ -425,7 +452,12 @@ class ShadowStudioUI {
     this.dragStartPosX = currentPos.x;
     this.dragStartPosY = currentPos.y;
 
-    this.elements.canvasOverlay.classList.add('draggable');
+    this.elements.canvasOverlay.classList.add('dragging');
+    const fgDims = this.app.getForegroundDimensions();
+    if (fgDims) {
+      this.elements.dragIndicator.style.width = `${fgDims.width}px`;
+      this.elements.dragIndicator.style.height = `${fgDims.height}px`;
+    }
     this.updateDragIndicator(currentPos.x, currentPos.y);
   }
 
@@ -446,7 +478,7 @@ class ShadowStudioUI {
   private handleDragEnd(): void {
     if (!this.isDragging) return;
     this.isDragging = false;
-    this.elements.canvasOverlay.classList.remove('draggable');
+    this.elements.canvasOverlay.classList.remove('dragging');
   }
 
   private updateDragIndicator(x: number, y: number): void {
