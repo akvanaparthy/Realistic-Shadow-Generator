@@ -274,6 +274,42 @@
       transform: scale(1.1);
     }
 
+    .upload-resize {
+      position: absolute;
+      bottom: 0.5rem;
+      right: 0.5rem;
+      padding: 0.375rem 0.75rem;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      display: none;
+      align-items: center;
+      gap: 0.375rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      z-index: 10;
+      font-size: 0.75rem;
+      font-family: var(--font-display);
+      color: var(--color-text-secondary);
+      font-weight: 500;
+    }
+
+    .upload-zone.has-file .upload-resize {
+      display: flex;
+    }
+
+    .upload-resize:hover {
+      background: var(--color-surface-elevated);
+      border-color: var(--color-safelight);
+      color: var(--color-safelight);
+      box-shadow: 0 0 8px var(--color-safelight-glow);
+    }
+
+    .upload-resize::before {
+      content: '⇲';
+      font-size: 1rem;
+    }
+
     .control-group {
       margin-bottom: 1.5rem;
     }
@@ -591,6 +627,241 @@
       opacity: 0.9;
       box-shadow: 0 0 12px var(--color-safelight-glow);
     }
+
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .resize-modal {
+      background: var(--color-surface);
+      border: 1px solid var(--color-safelight-dim);
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow:
+        0 0 0 1px var(--color-border),
+        0 8px 32px rgba(0, 0, 0, 0.8),
+        0 0 48px var(--color-safelight-glow);
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-backdrop.active .resize-modal {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--color-safelight);
+      letter-spacing: 0.05em;
+    }
+
+    .modal-close {
+      width: 28px;
+      height: 28px;
+      background: transparent;
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close:hover {
+      background: var(--color-surface-elevated);
+      border-color: var(--color-safelight);
+      color: var(--color-safelight);
+    }
+
+    .dimension-display {
+      background: var(--color-surface-elevated);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      font-family: var(--font-display);
+      font-size: 0.875rem;
+      color: var(--color-text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .dimension-value {
+      color: var(--color-safelight);
+      font-weight: 600;
+    }
+
+    .resize-inputs {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1rem;
+      align-items: end;
+      margin-bottom: 1.5rem;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .input-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-text-secondary);
+      font-family: var(--font-display);
+    }
+
+    .dimension-input {
+      background: var(--color-surface-elevated);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      padding: 0.75rem;
+      font-family: var(--font-display);
+      font-size: 1rem;
+      color: var(--color-text-primary);
+      width: 100%;
+      transition: all 0.2s ease;
+    }
+
+    .dimension-input:focus {
+      outline: none;
+      border-color: var(--color-safelight);
+      box-shadow: 0 0 0 3px var(--color-safelight-dim);
+    }
+
+    .aspect-lock {
+      width: 40px;
+      height: 40px;
+      background: var(--color-surface-elevated);
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--color-text-dim);
+      font-size: 1.25rem;
+    }
+
+    .aspect-lock:hover {
+      background: var(--color-surface);
+      border-color: var(--color-safelight);
+    }
+
+    .aspect-lock.locked {
+      background: var(--color-surface);
+      border-color: var(--color-safelight);
+      color: var(--color-safelight);
+      box-shadow: 0 0 12px var(--color-safelight-glow);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 2rem;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 0.875rem;
+      border-radius: 8px;
+      font-family: var(--font-ui);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .modal-btn-cancel {
+      background: var(--color-surface-elevated);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-primary);
+    }
+
+    .modal-btn-cancel:hover {
+      background: var(--color-surface);
+      border-color: var(--color-safelight);
+      color: var(--color-safelight);
+    }
+
+    .modal-btn-apply {
+      background: linear-gradient(135deg, var(--color-safelight) 0%, #f7931e 100%);
+      border: none;
+      color: var(--color-darkroom);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .modal-btn-apply:hover {
+      background: linear-gradient(135deg, #ff8555 0%, #ff9d3e 100%);
+      box-shadow: var(--shadow-glow), var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .canvas-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      cursor: move;
+      z-index: 5;
+      display: none;
+    }
+
+    .canvas-overlay.draggable {
+      display: block;
+    }
+
+    .drag-indicator {
+      position: absolute;
+      pointer-events: none;
+      border: 2px dashed var(--color-safelight);
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5), inset 0 0 0 2px rgba(0, 0, 0, 0.5);
+      display: none;
+    }
+
+    .canvas-overlay.draggable .drag-indicator {
+      display: block;
+    }
   </style>
 </head>
 <body>
@@ -614,6 +885,7 @@
         <div class="upload-zone" id="foreground-zone">
           <input type="file" id="foreground-input" accept="image/*">
           <button class="upload-remove" id="foreground-remove" title="Remove image">×</button>
+          <button class="upload-resize" id="foreground-resize-btn" data-image-type="foreground">Resize</button>
           <span class="upload-label">Foreground</span>
           <span class="upload-hint">PNG with transparency</span>
         </div>
@@ -621,6 +893,7 @@
         <div class="upload-zone" id="background-zone">
           <input type="file" id="background-input" accept="image/*">
           <button class="upload-remove" id="background-remove" title="Remove image">×</button>
+          <button class="upload-resize" id="background-resize-btn" data-image-type="background">Resize</button>
           <span class="upload-label">Background</span>
           <span class="upload-hint">Any image format</span>
         </div>
@@ -723,6 +996,9 @@
           </div>
         </div>
         <div class="canvas-container" id="canvas-container">
+          <div class="canvas-overlay" id="canvas-overlay">
+            <div class="drag-indicator" id="drag-indicator"></div>
+          </div>
           <div class="empty-state">
             <div class="empty-state-icon">◐</div>
             <div>Upload foreground and background images to begin</div>
@@ -730,6 +1006,41 @@
         </div>
       </div>
     </main>
+  </div>
+
+  <!-- Resize Modal -->
+  <div class="modal-backdrop" id="resize-modal-backdrop">
+    <div class="resize-modal" id="resize-modal">
+      <div class="modal-header">
+        <h3 class="modal-title">RESIZE IMAGE</h3>
+        <button class="modal-close" id="resize-modal-close">×</button>
+      </div>
+
+      <div class="dimension-display">
+        <span>Current: <span class="dimension-value" id="current-dimensions">0 × 0</span></span>
+      </div>
+
+      <div class="resize-inputs">
+        <div class="input-group">
+          <label class="input-label" for="resize-width-input">Width</label>
+          <input type="number" class="dimension-input" id="resize-width-input" min="1" value="800">
+        </div>
+
+        <button class="aspect-lock locked" id="resize-aspect-lock" title="Lock aspect ratio">
+          <span class="lock-icon">🔒</span>
+        </button>
+
+        <div class="input-group">
+          <label class="input-label" for="resize-height-input">Height</label>
+          <input type="number" class="dimension-input" id="resize-height-input" min="1" value="600">
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" id="resize-cancel">Cancel</button>
+        <button class="modal-btn modal-btn-apply" id="resize-apply">Apply Resize</button>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="/src/main.ts"></script>

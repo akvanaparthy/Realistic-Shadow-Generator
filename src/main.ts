@@ -8,6 +8,14 @@ class ShadowStudioUI {
   private currentView: 'composite' | 'shadow' | 'mask' = 'composite';
   private depthMapLoaded = false;
   private depthMapEnabled = false;
+  private resizeImageType: 'foreground' | 'background' | null = null;
+  private aspectRatioLocked = true;
+  private originalAspectRatio = 1;
+  private isDragging = false;
+  private dragStartX = 0;
+  private dragStartY = 0;
+  private dragStartPosX = 0;
+  private dragStartPosY = 0;
 
   private elements = {
     foregroundInput: document.getElementById('foreground-input') as HTMLInputElement,
@@ -35,11 +43,25 @@ class ShadowStudioUI {
     falloffValue: document.getElementById('falloff-value') as HTMLElement,
 
     canvasContainer: document.getElementById('canvas-container') as HTMLElement,
+    canvasOverlay: document.getElementById('canvas-overlay') as HTMLElement,
+    dragIndicator: document.getElementById('drag-indicator') as HTMLElement,
 
     exportComposite: document.getElementById('export-composite') as HTMLButtonElement,
     exportShadow: document.getElementById('export-shadow') as HTMLButtonElement,
     exportMask: document.getElementById('export-mask') as HTMLButtonElement,
     exportAll: document.getElementById('export-all') as HTMLButtonElement,
+
+    foregroundResizeBtn: document.getElementById('foreground-resize-btn') as HTMLButtonElement,
+    backgroundResizeBtn: document.getElementById('background-resize-btn') as HTMLButtonElement,
+    resizeModalBackdrop: document.getElementById('resize-modal-backdrop') as HTMLElement,
+    resizeModal: document.getElementById('resize-modal') as HTMLElement,
+    resizeModalClose: document.getElementById('resize-modal-close') as HTMLButtonElement,
+    currentDimensions: document.getElementById('current-dimensions') as HTMLElement,
+    resizeWidthInput: document.getElementById('resize-width-input') as HTMLInputElement,
+    resizeHeightInput: document.getElementById('resize-height-input') as HTMLInputElement,
+    resizeAspectLock: document.getElementById('resize-aspect-lock') as HTMLButtonElement,
+    resizeCancel: document.getElementById('resize-cancel') as HTMLButtonElement,
+    resizeApply: document.getElementById('resize-apply') as HTMLButtonElement,
   };
 
   constructor() {
@@ -91,6 +113,32 @@ class ShadowStudioUI {
         this.handlePositionChange(position);
       });
     });
+
+    this.elements.foregroundResizeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.openResizeModal('foreground');
+    });
+    this.elements.backgroundResizeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.openResizeModal('background');
+    });
+
+    this.elements.resizeModalClose.addEventListener('click', () => this.closeResizeModal());
+    this.elements.resizeCancel.addEventListener('click', () => this.closeResizeModal());
+    this.elements.resizeApply.addEventListener('click', () => this.applyResize());
+    this.elements.resizeModalBackdrop.addEventListener('click', (e) => {
+      if (e.target === this.elements.resizeModalBackdrop) {
+        this.closeResizeModal();
+      }
+    });
+
+    this.elements.resizeAspectLock.addEventListener('click', () => this.toggleAspectLock());
+    this.elements.resizeWidthInput.addEventListener('input', () => this.handleResizeWidthChange());
+    this.elements.resizeHeightInput.addEventListener('input', () => this.handleResizeHeightChange());
+
+    this.elements.canvasOverlay.addEventListener('mousedown', (e) => this.handleDragStart(e));
+    document.addEventListener('mousemove', (e) => this.handleDragMove(e));
+    document.addEventListener('mouseup', () => this.handleDragEnd());
   }
 
   private async handleForegroundUpload(event: Event): Promise<void> {
@@ -297,6 +345,118 @@ class ShadowStudioUI {
   private async exportAllImages(): Promise<void> {
     if (!this.currentResult) return;
     await this.app.exportAll(this.currentResult);
+  }
+
+  private openResizeModal(imageType: 'foreground' | 'background'): void {
+    this.resizeImageType = imageType;
+    const dimensions = imageType === 'foreground'
+      ? this.app.getForegroundDimensions()
+      : this.app.getBackgroundDimensions();
+
+    if (!dimensions) return;
+
+    this.originalAspectRatio = dimensions.width / dimensions.height;
+    this.elements.currentDimensions.textContent = `${dimensions.width} × ${dimensions.height}`;
+    this.elements.resizeWidthInput.value = dimensions.width.toString();
+    this.elements.resizeHeightInput.value = dimensions.height.toString();
+
+    this.aspectRatioLocked = true;
+    this.elements.resizeAspectLock.classList.add('locked');
+
+    this.elements.resizeModalBackdrop.classList.add('active');
+  }
+
+  private closeResizeModal(): void {
+    this.elements.resizeModalBackdrop.classList.remove('active');
+    this.resizeImageType = null;
+  }
+
+  private toggleAspectLock(): void {
+    this.aspectRatioLocked = !this.aspectRatioLocked;
+    this.elements.resizeAspectLock.classList.toggle('locked', this.aspectRatioLocked);
+    const lockIcon = this.elements.resizeAspectLock.querySelector('.lock-icon');
+    if (lockIcon) {
+      lockIcon.textContent = this.aspectRatioLocked ? '🔒' : '🔓';
+    }
+  }
+
+  private handleResizeWidthChange(): void {
+    if (!this.aspectRatioLocked) return;
+    const width = parseInt(this.elements.resizeWidthInput.value) || 1;
+    const height = Math.round(width / this.originalAspectRatio);
+    this.elements.resizeHeightInput.value = height.toString();
+  }
+
+  private handleResizeHeightChange(): void {
+    if (!this.aspectRatioLocked) return;
+    const height = parseInt(this.elements.resizeHeightInput.value) || 1;
+    const width = Math.round(height * this.originalAspectRatio);
+    this.elements.resizeWidthInput.value = width.toString();
+  }
+
+  private applyResize(): void {
+    const width = parseInt(this.elements.resizeWidthInput.value);
+    const height = parseInt(this.elements.resizeHeightInput.value);
+
+    if (!width || !height || width < 1 || height < 1) {
+      alert('Please enter valid dimensions');
+      return;
+    }
+
+    if (this.resizeImageType === 'foreground') {
+      this.app.resizeForeground(width, height);
+    } else if (this.resizeImageType === 'background') {
+      this.app.resizeBackground(width, height);
+    }
+
+    this.regenerateShadow();
+    this.closeResizeModal();
+  }
+
+  private handleDragStart(e: MouseEvent): void {
+    if (this.currentView !== 'composite') return;
+    if (!this.app.isReady()) return;
+
+    this.isDragging = true;
+    this.dragStartX = e.clientX;
+    this.dragStartY = e.clientY;
+
+    const currentPos = this.app.getPosition();
+    this.dragStartPosX = currentPos.x;
+    this.dragStartPosY = currentPos.y;
+
+    this.elements.canvasOverlay.classList.add('draggable');
+    this.updateDragIndicator(currentPos.x, currentPos.y);
+  }
+
+  private handleDragMove(e: MouseEvent): void {
+    if (!this.isDragging) return;
+
+    const deltaX = e.clientX - this.dragStartX;
+    const deltaY = e.clientY - this.dragStartY;
+
+    const newX = this.dragStartPosX + deltaX;
+    const newY = this.dragStartPosY + deltaY;
+
+    this.app.setCustomPosition(newX, newY);
+    this.updateDragIndicator(newX, newY);
+    this.regenerateShadow();
+  }
+
+  private handleDragEnd(): void {
+    if (!this.isDragging) return;
+    this.isDragging = false;
+    this.elements.canvasOverlay.classList.remove('draggable');
+  }
+
+  private updateDragIndicator(x: number, y: number): void {
+    const fgDims = this.app.getForegroundDimensions();
+    if (!fgDims) return;
+
+    this.elements.dragIndicator.style.left = `${x}px`;
+    this.elements.dragIndicator.style.top = `${y}px`;
+    this.elements.dragIndicator.style.width = `${fgDims.width}px`;
+    this.elements.dragIndicator.style.height = `${fgDims.height}px`;
   }
 }
 

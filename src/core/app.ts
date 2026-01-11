@@ -6,7 +6,9 @@ import { ProcessedImage, MaskData, LightParameters, ShadowParameters, GeneratedS
 
 export class ShadowApp {
   private foreground: ProcessedImage | null = null;
+  private foregroundOriginal: ProcessedImage | null = null;
   private background: ProcessedImage | null = null;
+  private backgroundOriginal: ProcessedImage | null = null;
   private depthMap: MaskData | null = null;
   private mask: MaskData | null = null;
   private generator: ShadowGenerator | null = null;
@@ -14,13 +16,49 @@ export class ShadowApp {
 
   async loadForeground(file: File): Promise<void> {
     this.foreground = await ImageLoader.loadFromFile(file);
+    this.foregroundOriginal = this.foreground;
     this.mask = MaskExtractor.extractFromAlpha(this.foreground);
     this.updateGenerator();
   }
 
   async loadBackground(file: File): Promise<void> {
     this.background = await ImageLoader.loadFromFile(file);
+    this.backgroundOriginal = this.background;
     this.updateGenerator();
+  }
+
+  resizeForeground(width: number, height: number): void {
+    if (!this.foregroundOriginal) return;
+    this.foreground = ImageLoader.resizeImage(this.foregroundOriginal, width, height);
+    this.mask = MaskExtractor.extractFromAlpha(this.foreground);
+    this.updateGenerator();
+  }
+
+  resizeBackground(width: number, height: number): void {
+    if (!this.backgroundOriginal) return;
+    this.background = ImageLoader.resizeImage(this.backgroundOriginal, width, height);
+    this.updateGenerator();
+  }
+
+  getForegroundDimensions(): { width: number; height: number } | null {
+    if (!this.foreground) return null;
+    return { width: this.foreground.width, height: this.foreground.height };
+  }
+
+  getBackgroundDimensions(): { width: number; height: number } | null {
+    if (!this.background) return null;
+    return { width: this.background.width, height: this.background.height };
+  }
+
+  setCustomPosition(x: number, y: number): void {
+    this.position = { x, y };
+    if (this.generator) {
+      this.generator.setPosition(this.position);
+    }
+  }
+
+  getPosition(): ForegroundPosition {
+    return this.position;
   }
 
   async loadDepthMap(file: File): Promise<void> {

@@ -59,4 +59,25 @@ export class ImageLoader {
       height: img.height
     };
   }
+
+  static resizeImage(processedImage: ProcessedImage, newWidth: number, newHeight: number): ProcessedImage {
+    const canvas = document.createElement('canvas');
+    canvas.width = newWidth;
+    canvas.height = newHeight;
+
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) {
+      throw new Error('Failed to get 2D context from canvas');
+    }
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(processedImage.canvas, 0, 0, newWidth, newHeight);
+
+    return {
+      canvas,
+      width: newWidth,
+      height: newHeight
+    };
+  }
 }
