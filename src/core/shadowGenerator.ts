@@ -57,7 +57,7 @@ export class ShadowGenerator {
     const angleRad = (light.angle * Math.PI) / 180;
     const elevationRad = (light.elevation * Math.PI) / 180;
 
-    const lightHeight = 500;
+    const lightHeight = light.distance;
     const lightDist = lightHeight / Math.tan(elevationRad + 0.01);
     const lightX = Math.cos(angleRad) * lightDist;
     const lightY = Math.sin(angleRad) * lightDist;
