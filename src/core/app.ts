@@ -5,6 +5,9 @@ import { Exporter } from './exporter';
 import { ProcessedImage, MaskData, LightParameters, ShadowParameters, GeneratedShadow, ForegroundPosition, PositionPreset } from './types';
 
 export class ShadowApp {
+  private static readonly CANVAS_WIDTH = 1600;
+  private static readonly CANVAS_HEIGHT = 900;
+
   private foreground: ProcessedImage | null = null;
   private foregroundOriginal: ProcessedImage | null = null;
   private background: ProcessedImage | null = null;
@@ -29,8 +32,9 @@ export class ShadowApp {
   }
 
   async loadBackground(file: File): Promise<void> {
-    this.background = await ImageLoader.loadFromFile(file);
-    this.backgroundOriginal = this.background;
+    const loaded = await ImageLoader.loadFromFile(file);
+    this.backgroundOriginal = loaded;
+    this.background = ImageLoader.resizeImage(loaded, ShadowApp.CANVAS_WIDTH, ShadowApp.CANVAS_HEIGHT);
     this.updateGenerator();
   }
 
@@ -43,7 +47,7 @@ export class ShadowApp {
 
   resizeBackground(width: number, height: number): void {
     if (!this.backgroundOriginal) return;
-    this.background = ImageLoader.resizeImage(this.backgroundOriginal, width, height);
+    this.background = ImageLoader.resizeImage(this.backgroundOriginal, ShadowApp.CANVAS_WIDTH, ShadowApp.CANVAS_HEIGHT);
     this.updateGenerator();
   }
 

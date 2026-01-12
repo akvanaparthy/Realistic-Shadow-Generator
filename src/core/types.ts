@@ -2,7 +2,6 @@ export interface LightParameters {
   angle: number;
   elevation: number;
   intensity: number;
-  distance: number;
 }
 
 export interface ShadowParameters {

@@ -84,7 +84,13 @@ export class ImageLoader {
 
   static async removeForegroundBackground(file: File): Promise<ProcessedImage> {
     try {
-      const blob = await removeBackground(file);
+      const blob = await removeBackground(file, {
+        model: 'medium',
+        output: {
+          format: 'image/png',
+          quality: 0.95,
+        },
+      });
       const url = URL.createObjectURL(blob);
       const img = await this.createImageFromUrl(url);
       URL.revokeObjectURL(url);

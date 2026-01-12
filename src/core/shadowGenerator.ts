@@ -57,7 +57,7 @@ export class ShadowGenerator {
     const angleRad = (light.angle * Math.PI) / 180;
     const elevationRad = (light.elevation * Math.PI) / 180;
 
-    const lightHeight = light.distance;
+    const lightHeight = 500;
     const lightDist = lightHeight / Math.tan(elevationRad + 0.01);
     const lightX = Math.cos(angleRad) * lightDist;
     const lightY = Math.sin(angleRad) * lightDist;
@@ -69,11 +69,11 @@ export class ShadowGenerator {
         if (this.mask.data[sourceIndex] > 128) {
           const objX = this.position.x + srcX;
           const objY = this.position.y + srcY;
-          const objHeight = (contactY - srcY) * 0.5;
+          const objHeight = Math.max((contactY - srcY) * 0.5, 0);
 
           const groundY = absoluteContactY;
 
-          if (objHeight > 0 && elevationRad > 0.01) {
+          if (elevationRad > 0.01) {
             const t = (lightHeight - objHeight) / lightHeight;
 
             const shadowX = objX + lightX * (1 - t);
@@ -95,6 +95,21 @@ export class ShadowGenerator {
               }
 
               const pixelIndex = (bgY * this.background.width + bgX) * 4;
+              const currentAlpha = pixels[pixelIndex + 3] / 255;
+              const newAlpha = Math.max(currentAlpha, opacity);
+
+              pixels[pixelIndex] = 0;
+              pixels[pixelIndex + 1] = 0;
+              pixels[pixelIndex + 2] = 0;
+              pixels[pixelIndex + 3] = Math.round(newAlpha * 255);
+            }
+          } else {
+            const bgX = Math.round(objX);
+            const bgY = Math.round(groundY);
+
+            if (bgX >= 0 && bgX < this.background.width && bgY >= 0 && bgY < this.background.height) {
+              const pixelIndex = (bgY * this.background.width + bgX) * 4;
+              const opacity = shadow.contactDarkness * light.intensity;
               const currentAlpha = pixels[pixelIndex + 3] / 255;
               const newAlpha = Math.max(currentAlpha, opacity);
 

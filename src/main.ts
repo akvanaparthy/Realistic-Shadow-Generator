@@ -36,7 +36,6 @@ class ShadowStudioUI {
     angleSlider: document.getElementById('angle-slider') as HTMLInputElement,
     elevationSlider: document.getElementById('elevation-slider') as HTMLInputElement,
     intensitySlider: document.getElementById('intensity-slider') as HTMLInputElement,
-    distanceSlider: document.getElementById('distance-slider') as HTMLInputElement,
     darknessSlider: document.getElementById('darkness-slider') as HTMLInputElement,
     blurSlider: document.getElementById('blur-slider') as HTMLInputElement,
     falloffSlider: document.getElementById('falloff-slider') as HTMLInputElement,
@@ -44,7 +43,6 @@ class ShadowStudioUI {
     angleValue: document.getElementById('angle-value') as HTMLElement,
     elevationValue: document.getElementById('elevation-value') as HTMLElement,
     intensityValue: document.getElementById('intensity-value') as HTMLElement,
-    distanceValue: document.getElementById('distance-value') as HTMLElement,
     darknessValue: document.getElementById('darkness-value') as HTMLElement,
     blurValue: document.getElementById('blur-value') as HTMLElement,
     falloffValue: document.getElementById('falloff-value') as HTMLElement,
@@ -100,7 +98,6 @@ class ShadowStudioUI {
     this.elements.angleSlider.addEventListener('input', () => this.handleControlChange());
     this.elements.elevationSlider.addEventListener('input', () => this.handleControlChange());
     this.elements.intensitySlider.addEventListener('input', () => this.handleControlChange());
-    this.elements.distanceSlider.addEventListener('input', () => this.handleControlChange());
     this.elements.darknessSlider.addEventListener('input', () => this.handleControlChange());
     this.elements.blurSlider.addEventListener('input', () => this.handleControlChange());
     this.elements.falloffSlider.addEventListener('input', () => this.handleControlChange());
@@ -159,8 +156,10 @@ class ShadowStudioUI {
     try {
       if (this.autoCutoutEnabled) {
         this.elements.foregroundZone.classList.add('processing');
+        this.disableAllInputs();
         const processedImage = await this.app.loadForegroundWithCutout(file);
         this.elements.foregroundZone.classList.remove('processing');
+        this.enableAllInputs();
       } else {
         await this.app.loadForeground(file);
       }
@@ -168,6 +167,7 @@ class ShadowStudioUI {
       this.regenerateShadow();
     } catch (error) {
       this.elements.foregroundZone.classList.remove('processing');
+      this.enableAllInputs();
       console.error('Failed to load foreground:', error);
       alert('Failed to load foreground image');
     }
@@ -272,7 +272,6 @@ class ShadowStudioUI {
     this.elements.angleValue.textContent = this.elements.angleSlider.value;
     this.elements.elevationValue.textContent = this.elements.elevationSlider.value;
     this.elements.intensityValue.textContent = parseFloat(this.elements.intensitySlider.value).toFixed(2);
-    this.elements.distanceValue.textContent = this.elements.distanceSlider.value;
     this.elements.darknessValue.textContent = parseFloat(this.elements.darknessSlider.value).toFixed(2);
     this.elements.blurValue.textContent = this.elements.blurSlider.value;
     this.elements.falloffValue.textContent = this.elements.falloffSlider.value;
@@ -287,7 +286,6 @@ class ShadowStudioUI {
       angle: parseFloat(this.elements.angleSlider.value),
       elevation: parseFloat(this.elements.elevationSlider.value),
       intensity: parseFloat(this.elements.intensitySlider.value),
-      distance: parseFloat(this.elements.distanceSlider.value),
     };
 
     const shadow: ShadowParameters = {
@@ -499,6 +497,30 @@ class ShadowStudioUI {
     this.elements.dragIndicator.style.top = `${y}px`;
     this.elements.dragIndicator.style.width = `${fgDims.width}px`;
     this.elements.dragIndicator.style.height = `${fgDims.height}px`;
+  }
+
+  private disableAllInputs(): void {
+    this.elements.foregroundInput.disabled = true;
+    this.elements.backgroundInput.disabled = true;
+    this.elements.depthInput.disabled = true;
+    this.elements.angleSlider.disabled = true;
+    this.elements.elevationSlider.disabled = true;
+    this.elements.intensitySlider.disabled = true;
+    this.elements.darknessSlider.disabled = true;
+    this.elements.blurSlider.disabled = true;
+    this.elements.falloffSlider.disabled = true;
+  }
+
+  private enableAllInputs(): void {
+    this.elements.foregroundInput.disabled = false;
+    this.elements.backgroundInput.disabled = false;
+    this.elements.depthInput.disabled = false;
+    this.elements.angleSlider.disabled = false;
+    this.elements.elevationSlider.disabled = false;
+    this.elements.intensitySlider.disabled = false;
+    this.elements.darknessSlider.disabled = false;
+    this.elements.blurSlider.disabled = false;
+    this.elements.falloffSlider.disabled = false;
   }
 }
 
